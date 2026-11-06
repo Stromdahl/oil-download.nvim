@@ -50,4 +50,9 @@ jobs:
       - uses: lumen-oss/nvim-busted-action@v1
         with:
           nvim_version: stable
-          before: luarocks install --local --dev oil.nvim
+          # `luarocks test` installs test_dependencies after this; unpin oil there,
+          # or its `== 2.16.0` would be installed and tested instead of scm.
+          before: |
+            sed -i 's/"oil.nvim == [^"]*"/"oil.nvim"/' oil-download.nvim-scm-1.rockspec
+            grep -q '"oil.nvim == ' oil-download.nvim-scm-1.rockspec && exit 1
+            luarocks install --local --dev oil.nvim
