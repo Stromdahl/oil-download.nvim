@@ -31,7 +31,7 @@ function M.check()
   local unknown = config.unknown_keys()
   if #unknown > 0 then
     health.warn("Unknown keys in vim.g.oil_download: " .. table.concat(unknown, ", "), {
-      "Valid keys: default_keymaps, downloader, url_pattern",
+      "Valid keys: " .. table.concat(config.keys(), ", "),
     })
   end
 

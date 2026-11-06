@@ -1,11 +1,12 @@
----@mod oil-download.config
-
 ---@class oil_download.Config
 ---@field default_keymaps boolean Map `p` in oil buffers to |<Plug>(oil-download-paste)|
 ---@field downloader fun(url: string, dir: string): string[] Builds the download command argv
 ---@field url_pattern string Lua pattern a buffer line must match to count as a URL
 
 ---@class (partial) oil_download.Opts : oil_download.Config
+
+---@type oil_download.Opts|fun():oil_download.Opts|nil
+vim.g.oil_download = vim.g.oil_download
 
 local M = {}
 
@@ -18,45 +19,84 @@ M.defaults = {
   url_pattern = "^%s*https?://%S+%s*$",
 }
 
---- The effective config: defaults merged with `vim.g.oil_download`
---- (a table, or a function returning one). Read on every call, so changes
---- to `vim.g.oil_download` apply without a restart.
----@return oil_download.Config
-function M.get()
+--- `vim.g.oil_download` as a table: called first if it is a function.
+---@return oil_download.Opts
+function M.read_user()
   local user = vim.g.oil_download
   if type(user) == "function" then user = user() end
-  return vim.tbl_deep_extend("force", M.defaults, user or {})
+  return type(user) == "table" and user or {}
+end
+
+---@param name string
+---@param value any
+---@return string? err
+local function check(name, value)
+  local expected = type(M.defaults[name])
+  local ok, err = pcall(function()
+    if vim.fn.has("nvim-0.11") == 1 then
+      vim.validate(name, value, expected)
+    else
+      vim.validate({ [name] = { value, expected } }) -- 0.10 spec form
+    end
+  end)
+  return not ok and tostring(err) or nil
+end
+
+--- Defaults merged with `vim.g.oil_download`, invalid fields left at their
+--- defaults.
+---@return oil_download.Config cfg, string[] errors
+local function resolve()
+  local cfg = vim.tbl_deep_extend("force", M.defaults, M.read_user())
+  local errors = {}
+  for name in pairs(M.defaults) do
+    local err = check(name, cfg[name])
+    if err then
+      table.insert(errors, err)
+      cfg[name] = M.defaults[name]
+    end
+  end
+  table.sort(errors)
+  return cfg, errors
+end
+
+--- The effective config. Read on every call, so changes to
+--- `vim.g.oil_download` apply without a restart. An invalid option is
+--- reported once and replaced by its default.
+---@return oil_download.Config
+function M.get()
+  local cfg, errors = resolve()
+  if #errors > 0 then
+    vim.notify_once(
+      "oil-download: invalid config, using defaults for:\n" .. table.concat(errors, "\n"),
+      vim.log.levels.ERROR
+    )
+  end
+  return cfg
 end
 
 --- Validate the effective config.
 ---@return boolean ok, string? err
 function M.validate()
-  local cfg = M.get()
-  local fields = {
-    { "default_keymaps", cfg.default_keymaps, "boolean" },
-    { "downloader", cfg.downloader, "function" },
-    { "url_pattern", cfg.url_pattern, "string" },
-  }
-  return pcall(function()
-    for _, f in ipairs(fields) do
-      if vim.fn.has("nvim-0.11") == 1 then
-        vim.validate(f[1], f[2], f[3])
-      else
-        vim.validate({ [f[1]] = { f[2], f[3] } }) -- 0.10 spec form
-      end
-    end
-  end)
+  local _, errors = resolve()
+  if #errors > 0 then return false, table.concat(errors, "; ") end
+  return true
 end
 
 --- Keys in `vim.g.oil_download` that aren't config fields (likely typos).
 ---@return string[]
 function M.unknown_keys()
-  local user = vim.g.oil_download
-  if type(user) == "function" then user = user() end
   local out = {}
-  for k in pairs(user or {}) do
+  for k in pairs(M.read_user()) do
     if M.defaults[k] == nil then table.insert(out, tostring(k)) end
   end
+  table.sort(out)
+  return out
+end
+
+--- The config field names, sorted.
+---@return string[]
+function M.keys()
+  local out = vim.tbl_keys(M.defaults)
   table.sort(out)
   return out
 end
