@@ -131,6 +131,27 @@ function M.after_save(fn)
   vim.schedule(check)
 end
 
+--- Oil reports parse errors as diagnostics on the buffer it parsed, which had
+--- the URL lines removed. Once they are back, move each diagnostic down past
+--- the URL rows above it so it points at the line oil meant.
+---@param buf integer
+---@param rows integer[] ascending 1-based rows the URL lines are back on
+function M.shift_diagnostics(buf, rows)
+  local ns = vim.api.nvim_get_namespaces()["Oil"]
+  if not ns then return end
+  local diags = vim.diagnostic.get(buf, { namespace = ns })
+  if #diags == 0 then return end
+  for _, d in ipairs(diags) do
+    for _, row in ipairs(rows) do
+      if row - 1 <= d.lnum then
+        d.lnum = d.lnum + 1
+        if d.end_lnum then d.end_lnum = d.end_lnum + 1 end
+      end
+    end
+  end
+  vim.diagnostic.set(ns, buf, diags)
+end
+
 --- If oil never opened the dialog for the queued batch (e.g. the buffer had
 --- a parse error), take it back so the caller can restore its lines.
 ---@param batch oil_download.Batch

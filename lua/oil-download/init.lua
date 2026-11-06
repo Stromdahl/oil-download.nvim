@@ -181,7 +181,12 @@ function M.on_write()
     -- Oil opens the dialog synchronously within this :w. If it didn't
     -- (parse error elsewhere in the buffer), give the lines back.
     vim.schedule(function()
-      if hook.take_back(batch) then restore(stripped) end
+      if hook.take_back(batch) then
+        restore(stripped)
+        for _, s in ipairs(stripped) do
+          hook.shift_diagnostics(s.buf, s.rows)
+        end
+      end
     end)
     return
   end
