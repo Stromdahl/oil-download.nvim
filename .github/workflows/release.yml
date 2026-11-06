@@ -35,5 +35,6 @@ jobs:
           LUX_API_KEY: ${{ secrets.LUX_API_KEY }}
         with:
           version: ${{ needs.release-please.outputs.tag_name }}
+          # Not read from our rockspec: the action generates its own.
           dependencies: |
             oil.nvim
