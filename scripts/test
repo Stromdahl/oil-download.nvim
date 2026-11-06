@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run the busted suite against the project-local LuaRocks tree in .hererocks/
-# (see CONTRIBUTING.md for how to create it). CI uses nvim-busted-action instead.
+# (see "Development" in README.md for how to create it). CI uses nvim-busted-action instead.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 eval "$(.hererocks/bin/luarocks path)"

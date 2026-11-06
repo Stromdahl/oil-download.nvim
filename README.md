@@ -46,6 +46,8 @@ vim.pack.add({
 
 Anything else you press `p` on, including oil entries you yanked to copy, pastes as usual.
 
+URLs always bring up the dialog, even with oil's `skip_confirm_for_simple_edits`. Only `:w` is seen: calling `require("oil").save()` from code skips this plugin, and URL lines then reach oil as file names.
+
 `:OilDownload [url]` downloads straight away. With no argument it asks for a URL, prefilled from the clipboard.
 
 ## Configuration

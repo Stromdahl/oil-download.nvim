@@ -45,6 +45,11 @@ The plugin works without calling `setup()`.
 Any line matching `url_pattern` counts, so typing a URL works as well as
 pasting one. Several URLs can be saved at once.
 
+URLs always bring up the dialog, even with oil's
+`skip_confirm_for_simple_edits` set. Only `:w` (and anything else that fires
+|BufWritePre| on the oil buffer) is seen: calling `require("oil").save()`
+from code skips this plugin, and URL lines then reach oil as file names.
+
 ==============================================================================
 3. MAPPINGS                                            *oil-download-mappings*
 
