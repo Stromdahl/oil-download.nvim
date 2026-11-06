@@ -118,11 +118,14 @@ local function oil_busy()
 end
 
 --- Run `fn` once oil has finished the save in progress (including waiting on
---- its dialog and re-rendering afterwards).
+--- its dialog and re-rendering afterwards). Gives up waiting after a while
+--- (a stuck render flag) once no dialog is open, and runs `fn` anyway.
 ---@param fn fun()
 function M.after_save(fn)
+  local deadline = vim.uv.now() + 5000
   local function check()
-    if oil_busy() then
+    local dialog_open = vim.bo.filetype == "oil_preview"
+    if oil_busy() and (dialog_open or vim.uv.now() < deadline) then
       vim.defer_fn(check, 20)
     else
       fn()
@@ -132,24 +135,32 @@ function M.after_save(fn)
 end
 
 --- Oil reports parse errors as diagnostics on the buffer it parsed, which had
---- the URL lines removed. Once they are back, move each diagnostic down past
---- the URL rows above it so it points at the line oil meant.
----@param buf integer
----@param rows integer[] ascending 1-based rows the URL lines are back on
-function M.shift_diagnostics(buf, rows)
+--- the URL lines removed. Run `put_back` (which re-inserts them), then move
+--- each diagnostic down past the URL rows above it so it points at the line
+--- oil meant. Diagnostics are read before `put_back`, so this is right
+--- whether or not Neovim moves them along with inserted text.
+---@param stripped { buf: integer, rows: integer[] }[]
+---@param put_back fun()
+function M.keep_diagnostics(stripped, put_back)
   local ns = vim.api.nvim_get_namespaces()["Oil"]
-  if not ns then return end
-  local diags = vim.diagnostic.get(buf, { namespace = ns })
-  if #diags == 0 then return end
-  for _, d in ipairs(diags) do
-    for _, row in ipairs(rows) do
-      if row - 1 <= d.lnum then
-        d.lnum = d.lnum + 1
-        if d.end_lnum then d.end_lnum = d.end_lnum + 1 end
+  local saved = {}
+  for i, s in ipairs(stripped) do
+    saved[i] = ns and vim.api.nvim_buf_is_valid(s.buf) and vim.diagnostic.get(s.buf, { namespace = ns }) or {}
+  end
+  put_back()
+  for i, s in ipairs(stripped) do
+    if #saved[i] > 0 and vim.api.nvim_buf_is_valid(s.buf) then
+      for _, d in ipairs(saved[i]) do
+        for _, row in ipairs(s.rows) do
+          if row - 1 <= d.lnum then
+            d.lnum = d.lnum + 1
+            if d.end_lnum then d.end_lnum = d.end_lnum + 1 end
+          end
+        end
       end
+      vim.diagnostic.set(ns, s.buf, saved[i])
     end
   end
-  vim.diagnostic.set(ns, buf, diags)
 end
 
 --- If oil never opened the dialog for the queued batch (e.g. the buffer had

@@ -182,10 +182,7 @@ function M.on_write()
     -- (parse error elsewhere in the buffer), give the lines back.
     vim.schedule(function()
       if hook.take_back(batch) then
-        restore(stripped)
-        for _, s in ipairs(stripped) do
-          hook.shift_diagnostics(s.buf, s.rows)
-        end
+        hook.keep_diagnostics(stripped, function() restore(stripped) end)
       end
     end)
     return
@@ -208,6 +205,8 @@ function M.on_write()
   if vim.fn.confirm(msg, "&Yes\n&No", 1) == 1 then
     download_all(stripped)
   else
+    -- Said up front: if oil's internals moved, the put-back below may not stick.
+    vim.notify("Skipped downloads:\n" .. table.concat(urls, "\n"), vim.log.levels.WARN)
     hook.after_save(function() restore(stripped) end)
   end
 end
