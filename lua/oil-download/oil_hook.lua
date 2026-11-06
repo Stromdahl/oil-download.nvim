@@ -79,10 +79,13 @@ end
 
 local function install(confirmation, config)
   if not confirmation[STATE] then
+    local original = confirmation.show
     ---@type oil_download.HookState
-    local state = { original = confirmation.show }
-    -- Dispatch through package.loaded so a reloaded module takes over.
-    state.wrapper = function(...) return require("oil-download.oil_hook")._show(state.original, ...) end
+    local state = {
+      original = original,
+      -- Dispatch through package.loaded so a reloaded module takes over.
+      wrapper = function(...) return require("oil-download.oil_hook")._show(original, ...) end,
+    }
     confirmation[STATE] = state
     confirmation.show = state.wrapper
   end

@@ -6,8 +6,8 @@ local function oil_location()
   local file = vim.api.nvim_get_runtime_file("lua/oil/init.lua", false)[1]
   if not file then
     -- installed as a rock (on package.path, not the runtimepath)
-    file = package.searchpath("oil", package.path)
-    return file and vim.fn.fnamemodify(file, ":h")
+    local rock = package.searchpath("oil", package.path)
+    return rock and vim.fn.fnamemodify(rock, ":h")
   end
   local root = vim.fn.fnamemodify(file, ":h:h:h")
   if vim.uv.fs_stat(root .. "/.git") then

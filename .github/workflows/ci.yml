@@ -23,6 +23,7 @@ jobs:
       - uses: mrcjkb/lua-typecheck-action@v1
         with:
           checklevel: Warning
+          configpath: .luarc.json
           directories: |
             lua
             plugin
