@@ -26,6 +26,15 @@ describe("pressing p in an oil buffer", function()
     assert.are.equal("https://example.com/a.zip", lines[2])
   end)
 
+  it("in an empty directory, replaces oil's blank line instead of leaving it", function()
+    h.open(h.tmpdir())
+    vim.fn.setreg("a", "https://example.com/a.zip", "c")
+
+    press('"ap')
+
+    assert.are.same({ "https://example.com/a.zip" }, h.lines())
+  end)
+
   it("puts several URLs on one line each", function()
     vim.fn.setreg("a", "https://example.com/a\nhttps://example.com/b\n", "l")
 

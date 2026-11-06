@@ -72,7 +72,13 @@ function M.paste()
   local reg, count = vim.v.register, vim.v.count1
   local lines = register_lines(reg)
   if #lines > 0 and vim.iter(lines):all(M.is_url) then
-    vim.api.nvim_put(lines, "l", true, true)
+    local current = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+    if #current == 1 and current[1] == "" then
+      -- empty directory: oil shows one blank line; replace it
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, lines)
+    else
+      vim.api.nvim_put(lines, "l", true, true)
+    end
   else
     vim.cmd(("normal! %d\"%sp"):format(count, reg))
   end
