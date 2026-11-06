@@ -20,10 +20,14 @@ local SCHEME = "oil-download://"
 ---@type oil_download.Batch?
 local pending
 
----@type function? the wrapper we installed, to detect double-install
-local wrapper
----@type function? oil's original show
-local original
+-- Install state lives on oil's module table, not in this module: it must
+-- survive this module being reloaded (`:Lazy reload`), and it pins oil's real
+-- `show` once, so a plugin that wraps `show` after us is never mistaken for it.
+local STATE = "_oil_download_hook"
+
+---@class oil_download.HookState
+---@field original function oil's own show, captured once
+---@field wrapper function what we put in its place
 
 ---@return table? confirmation, table? config, string? reason
 local function internals()
@@ -49,10 +53,11 @@ end
 ---@return boolean
 function M.installed()
   local ok, confirmation = pcall(require, "oil.mutator.confirmation")
-  return ok and wrapper ~= nil and confirmation.show == wrapper
+  return ok and type(confirmation) == "table" and confirmation[STATE] ~= nil
 end
 
-local function wrapped_show(actions, should_confirm, cb)
+---@param original function
+function M._show(original, actions, should_confirm, cb)
   local batch = pending
   pending = nil
   if not batch then return original(actions, should_confirm, cb) end
@@ -73,10 +78,13 @@ local function wrapped_show(actions, should_confirm, cb)
 end
 
 local function install(confirmation, config)
-  if confirmation.show ~= wrapper then
-    original = confirmation.show
-    wrapper = function(...) return wrapped_show(...) end
-    confirmation.show = wrapper
+  if not confirmation[STATE] then
+    ---@type oil_download.HookState
+    local state = { original = confirmation.show }
+    -- Dispatch through package.loaded so a reloaded module takes over.
+    state.wrapper = function(...) return require("oil-download.oil_hook")._show(state.original, ...) end
+    confirmation[STATE] = state
+    confirmation.show = state.wrapper
   end
   -- Re-registered every save: oil.setup() resets _adapter_by_scheme.
   config._adapter_by_scheme[SCHEME] = {
