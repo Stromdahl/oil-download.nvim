@@ -1,0 +1,131 @@
+*oil-download.txt*      Paste URLs into oil.nvim and download them on :w
+
+==============================================================================
+CONTENTS                                               *oil-download-contents*
+
+  1. Introduction ............................... |oil-download-intro|
+  2. Usage ...................................... |oil-download-usage|
+  3. Mappings ................................... |oil-download-mappings|
+  4. Commands ................................... |oil-download-commands|
+  5. Configuration .............................. |oil-download-config|
+  6. Lua API .................................... |oil-download-api|
+  7. How it hooks oil ........................... |oil-download-internals|
+
+==============================================================================
+1. INTRODUCTION                                           *oil-download-intro*
+
+oil-download.nvim lets you download files the way oil.nvim lets you create
+them: write a URL into an oil buffer, save, and confirm. The download goes
+into the directory the buffer shows.
+
+Requirements:
+  - Neovim 0.10 or newer
+  - oil.nvim (https://github.com/stevearc/oil.nvim)
+  - `wget`, or another downloader set with |oil-download-config|
+
+The plugin works without calling `setup()`.
+
+==============================================================================
+2. USAGE                                                  *oil-download-usage*
+
+1. Copy a URL.
+2. In an oil buffer, press `p`. The URL is put on its own line, even if the
+   register holds it without a trailing newline.
+3. Save with `:w`. Oil's confirmation dialog lists it next to any other
+   change:
+>
+    DOWNLOAD https://example.com/file.zip
+    CREATE notes.txt
+                 [Y]es    [N]o
+<
+4. `Y` downloads in the background and applies the other changes. `N` does
+   neither and leaves the URL lines in the buffer, just as oil keeps a
+   cancelled edit.
+
+Any line matching `url_pattern` counts, so typing a URL works as well as
+pasting one. Several URLs can be saved at once.
+
+==============================================================================
+3. MAPPINGS                                            *oil-download-mappings*
+
+                                                  *<Plug>(oil-download-paste)*
+<Plug>(oil-download-paste)
+    Like `p`, except that when the register holds only URLs, each is put on
+    its own line below the cursor. Anything else (including oil entries you
+    yanked to copy) is pasted normally.
+
+    Mapped to `p` in oil buffers by default. The default is skipped when
+    `default_keymaps` is false, when you have mapped this <Plug> yourself, or
+    when oil's own `keymaps` option maps `p`.
+
+                                                 *<Plug>(oil-download-prompt)*
+<Plug>(oil-download-prompt)
+    Ask for a URL (prefilled from the `+` register) and download it into the
+    current directory right away. Not mapped by default:
+>lua
+    vim.keymap.set("n", "gw", "<Plug>(oil-download-prompt)")
+<
+==============================================================================
+4. COMMANDS                                            *oil-download-commands*
+
+                                                                *:OilDownload*
+:OilDownload [url]
+    Download [url] into the directory of the current oil buffer, or the
+    working directory outside oil. Without [url], prompt for it as
+    |<Plug>(oil-download-prompt)| does.
+
+==============================================================================
+5. CONFIGURATION                                         *oil-download-config*
+
+                                                            *g:oil_download*
+Set `vim.g.oil_download` to a table (or a function returning one) before or
+after the plugin loads; it is read on every use. `require("oil-download")
+.setup(opts)` does the same thing and suits lazy.nvim's `opts`.
+
+Defaults:
+>lua
+    vim.g.oil_download = {
+      -- map `p` in oil buffers to <Plug>(oil-download-paste)
+      default_keymaps = true,
+      -- command that downloads `url` into `dir`
+      downloader = function(url, dir)
+        return { "wget", "-q", "-P", dir, url }
+      end,
+      -- a buffer line matching this Lua pattern is a URL
+      url_pattern = "^%s*https?://%S+%s*$",
+    }
+<
+For curl:
+>lua
+    downloader = function(url, dir)
+      return { "curl", "-fsSLO", "--output-dir", dir, url }
+    end,
+<
+==============================================================================
+6. LUA API                                                  *oil-download-api*
+
+require("oil-download").download({url}, {dir})       *oil-download.download()*
+    Download {url} into {dir} (default: the current oil directory, or the
+    working directory) in the background.
+
+require("oil-download").paste()                          *oil-download.paste()*
+    What |<Plug>(oil-download-paste)| runs.
+
+require("oil-download").prompt()                        *oil-download.prompt()*
+    What |<Plug>(oil-download-prompt)| runs.
+
+==============================================================================
+7. HOW IT HOOKS OIL                                    *oil-download-internals*
+
+Oil has no public way to add lines to its confirmation dialog, so this plugin
+uses two oil internals: it wraps `require("oil.mutator.confirmation").show`
+and registers a display-only adapter for an `oil-download://` scheme. All of
+it lives in `lua/oil-download/oil_hook.lua`.
+
+If an oil update removes those internals, the plugin switches to a fallback:
+it asks with its own prompt before oil's dialog. On No in that mode the URL
+lines are dropped (not restored) and listed in a notification.
+
+Run `:checkhealth oil-download` to see which mode is active.
+
+ vim:tw=78:ts=8:noet:ft=help:norl:

@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  stylua:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: JohnnyMorganz/stylua-action@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version: v2.6.0
+          args: --check .
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mrcjkb/lua-typecheck-action@v1
+        with:
+          checklevel: Warning
+          directories: |
+            lua
+            plugin
+            ftplugin
+
+  test:
+    name: test (nvim ${{ matrix.nvim }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        nvim: [v0.10.4, stable, nightly]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lumen-oss/nvim-busted-action@v1
+        with:
+          nvim_version: ${{ matrix.nvim }}
+
+  # Early warning: does the plugin still hook the newest oil.nvim?
+  oil-canary:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: lumen-oss/nvim-busted-action@v1
+        with:
+          nvim_version: stable
+          before: luarocks install --local --dev oil.nvim
