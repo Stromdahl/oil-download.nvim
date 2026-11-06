@@ -1,10 +1,11 @@
 local h = require("helpers")
 
 describe(":OilDownload", function()
-  local dir, real_input
+  local dir, real_input, real_cwd
 
   after_each(function()
     vim.ui.input = real_input
+    vim.fn.chdir(real_cwd)
     h.reset()
   end)
 
@@ -12,6 +13,7 @@ describe(":OilDownload", function()
     h.boot()
     vim.g.oil_download = { downloader = h.recorder }
     real_input = vim.ui.input
+    real_cwd = vim.fn.getcwd()
     dir = h.tmpdir()
     h.open(dir)
   end)
