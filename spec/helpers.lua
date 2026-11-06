@@ -58,12 +58,14 @@ function M.reset()
   vim.cmd("silent! %bwipeout!")
 end
 
---- Open oil on `dir` and wait for it to render.
-function M.open(dir)
-  M.reset()
+--- Open oil on `dir` and wait for it to render. Starts from a clean slate
+--- unless `opts.keep`, which keeps the other (possibly modified) oil buffers.
+---@param opts? { keep?: boolean }
+function M.open(dir, opts)
+  if not (opts and opts.keep) then M.reset() end
   require("oil").open(dir)
   vim.wait(3000, function()
-    return vim.bo.filetype == "oil" and require("oil").get_current_dir() ~= nil
+    return vim.bo.filetype == "oil" and require("oil").get_current_dir() == dir
       and #vim.api.nvim_buf_get_lines(0, 0, -1, false) > 0
   end, 20)
   -- oil renders asynchronously; let it settle

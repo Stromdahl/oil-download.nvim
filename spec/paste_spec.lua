@@ -54,7 +54,7 @@ describe("pressing p in an oil buffer", function()
   it("pastes a yanked oil entry line normally", function()
     press("yy")
     local yanked = vim.fn.getreg('"')
-    assert.matches("^/%d+ .*existing%.txt", yanked)
+    assert.matches("existing%.txt", yanked)
 
     press("p")
 

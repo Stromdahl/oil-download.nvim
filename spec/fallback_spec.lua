@@ -65,9 +65,7 @@ describe("when oil's internals have changed", function()
   it("names each URL's own directory when several oil buffers are saved", function()
     vim.api.nvim_buf_set_lines(0, -1, -1, false, { "https://example.com/a.zip" })
     local other = h.tmpdir()
-    require("oil").open(other)
-    vim.wait(3000, function() return require("oil").get_current_dir() == other end, 20)
-    vim.wait(200)
+    h.open(other, { keep = true })
 
     local asked = save_answering(1)
 
