@@ -99,7 +99,7 @@ describe("saving an oil buffer with URL lines", function()
     assert.are.same({ "https://example.com/a", dup, dup2 }, h.lines())
     local diags = vim.diagnostic.get(0)
     assert.are.equal(1, #diags)
-    assert.is_true(vim.tbl_contains({ 1, 2 }, diags[1].lnum), "diagnostic on a renamed line, got " .. diags[1].lnum)
+    assert.are.equal(2, diags[1].lnum) -- oil flags the second same.txt
     assert.are.equal(diags[1].lnum + 1, vim.api.nvim_win_get_cursor(0)[1])
     assert.are.same({}, h.wait_downloads(dir, 1, 300))
   end)

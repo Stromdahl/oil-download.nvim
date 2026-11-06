@@ -74,4 +74,23 @@ describe("when oil's internals have changed", function()
     assert.are.same({ "https://example.com/a.zip" }, h.wait_downloads(dir, 1))
     assert.are.same({ "https://example.com/a.zip" }, h.wait_downloads(other, 1))
   end)
+
+  it("on No after a parse error, keeps oil's diagnostic on the line it flagged", function()
+    vim.fn.writefile({}, dir .. "a.txt")
+    vim.fn.writefile({}, dir .. "b.txt")
+    h.open(dir)
+    local entries = h.lines()
+    local dup = entries[1]:gsub("a%.txt$", "same.txt")
+    local dup2 = entries[2]:gsub("b%.txt$", "same.txt")
+    vim.fn.confirm = function() return 2 end
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "https://example.com/a", dup, dup2 })
+
+    vim.cmd("w")
+    vim.wait(1000, function() return #h.lines() == 3 end)
+
+    assert.are.same({ "https://example.com/a", dup, dup2 }, h.lines())
+    local diags = vim.diagnostic.get(0)
+    assert.are.equal(1, #diags)
+    assert.are.equal(2, diags[1].lnum) -- oil flags the second same.txt
+  end)
 end)
