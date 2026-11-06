@@ -187,7 +187,19 @@ function M.on_write()
   end
 
   -- Fallback: oil internals changed. Ask with our own prompt instead.
-  local msg = "Download into " .. M.target_dir() .. "?\n\n" .. table.concat(urls, "\n")
+  local by_dir, dirs = {}, {}
+  for _, s in ipairs(stripped) do
+    if not by_dir[s.dir] then
+      by_dir[s.dir] = {}
+      table.insert(dirs, s.dir)
+    end
+    vim.list_extend(by_dir[s.dir], s.urls)
+  end
+  local parts = { "Download?" }
+  for _, dir in ipairs(dirs) do
+    table.insert(parts, "\nInto " .. dir .. "\n  " .. table.concat(by_dir[dir], "\n  "))
+  end
+  local msg = table.concat(parts, "\n")
   if vim.fn.confirm(msg, "&Yes\n&No", 1) == 1 then
     download_all(stripped)
   else
