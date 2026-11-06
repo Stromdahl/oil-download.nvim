@@ -70,7 +70,7 @@ describe("oil internals the plugin depends on", function()
     assert.matches("vim%.b%[bufnr%]%.oil_dirty = opts", src)
   end)
 
-  it("reports parse errors as diagnostics in the \"Oil\" namespace", function()
+  it('reports parse errors as diagnostics in the "Oil" namespace', function()
     local dir = h.tmpdir()
     vim.fn.writefile({}, dir .. "a.txt")
     vim.fn.writefile({}, dir .. "b.txt")
@@ -88,7 +88,8 @@ describe("oil internals the plugin depends on", function()
     assert.are.equal(1, #vim.diagnostic.get(0, { namespace = ns }))
   end)
 
-  it("plugin reports the hook as available", function()
-    assert.is_true((require("oil-download.oil_hook").available()))
-  end)
+  it(
+    "plugin reports the hook as available",
+    function() assert.is_true((require("oil-download.oil_hook").available())) end
+  )
 end)

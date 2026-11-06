@@ -50,7 +50,8 @@ describe(":checkhealth oil-download", function()
     assert.matches("WARNING.-defualt_keymaps", checkhealth())
   end)
 
-  it("confirms the DOWNLOAD highlighting for oil's dialog is on the runtimepath", function()
-    assert.matches("OK.-after/syntax/oil_preview%.vim", checkhealth())
-  end)
+  it(
+    "confirms the DOWNLOAD highlighting for oil's dialog is on the runtimepath",
+    function() assert.matches("OK.-after/syntax/oil_preview%.vim", checkhealth()) end
+  )
 end)

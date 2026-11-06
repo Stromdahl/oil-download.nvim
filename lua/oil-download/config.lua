@@ -13,9 +13,7 @@ local M = {}
 ---@type oil_download.Config
 M.defaults = {
   default_keymaps = true,
-  downloader = function(url, dir)
-    return { "wget", "-q", "-P", dir, url }
-  end,
+  downloader = function(url, dir) return { "wget", "-q", "-P", dir, url } end,
   url_pattern = "^%s*https?://%S+%s*$",
 }
 

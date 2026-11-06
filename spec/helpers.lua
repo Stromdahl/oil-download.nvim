@@ -41,16 +41,16 @@ function M.tmpdir()
   return dir
 end
 
-M.recorder = function(url, dir)
-  return { "sh", "-c", 'printf "%s\\n" "$1" >> "$2/.downloads"', "sh", url, dir }
-end
+M.recorder = function(url, dir) return { "sh", "-c", 'printf "%s\\n" "$1" >> "$2/.downloads"', "sh", url, dir } end
 
 ---@return string[]
 function M.downloads(dir)
   local f = io.open(dir .. ".downloads")
   if not f then return {} end
   local out = {}
-  for line in f:lines() do table.insert(out, line) end
+  for line in f:lines() do
+    table.insert(out, line)
+  end
   f:close()
   return out
 end
@@ -78,17 +78,20 @@ end
 function M.open(dir, opts)
   if not (opts and opts.keep) then M.reset() end
   require("oil").open(dir)
-  vim.wait(3000, function()
-    return vim.bo.filetype == "oil" and require("oil").get_current_dir() == dir
-      and #vim.api.nvim_buf_get_lines(0, 0, -1, false) > 0
-  end, 20)
+  vim.wait(
+    3000,
+    function()
+      return vim.bo.filetype == "oil"
+        and require("oil").get_current_dir() == dir
+        and #vim.api.nvim_buf_get_lines(0, 0, -1, false) > 0
+    end,
+    20
+  )
   -- oil renders asynchronously; let it settle
   vim.wait(200)
 end
 
-function M.lines(buf)
-  return vim.api.nvim_buf_get_lines(buf or 0, 0, -1, false)
-end
+function M.lines(buf) return vim.api.nvim_buf_get_lines(buf or 0, 0, -1, false) end
 
 --- Append lines to the current oil buffer, :w, then answer the dialog.
 ---@param answer "y"|"n"

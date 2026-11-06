@@ -18,9 +18,7 @@ end
 
 ---@param line string
 ---@return boolean
-function M.is_url(line)
-  return line:match(config.get().url_pattern) ~= nil
-end
+function M.is_url(line) return line:match(config.get().url_pattern) ~= nil end
 
 --- Directory downloads go to: the oil directory of `buf` (default: current
 --- buffer), else the working directory.
@@ -83,7 +81,7 @@ function M.paste()
       vim.api.nvim_put(lines, "l", true, true)
     end
   else
-    vim.cmd(("normal! %d\"%sp"):format(count, reg))
+    vim.cmd(('normal! %d"%sp'):format(count, reg))
   end
 end
 
@@ -106,11 +104,7 @@ end
 local function strip_all()
   local out = {}
   for _, buf in ipairs(vim.api.nvim_list_bufs()) do
-    if
-      vim.api.nvim_buf_is_loaded(buf)
-      and vim.bo[buf].modified
-      and vim.api.nvim_buf_get_name(buf):match("^oil://")
-    then
+    if vim.api.nvim_buf_is_loaded(buf) and vim.bo[buf].modified and vim.api.nvim_buf_get_name(buf):match("^oil://") then
       local rows, urls = {}, {}
       for i, line in ipairs(vim.api.nvim_buf_get_lines(buf, 0, -1, false)) do
         if M.is_url(line) then
@@ -181,9 +175,7 @@ function M.on_write()
     -- Oil opens the dialog synchronously within this :w. If it didn't
     -- (parse error elsewhere in the buffer), give the lines back.
     vim.schedule(function()
-      if hook.take_back(batch) then
-        hook.keep_diagnostics(stripped, function() restore(stripped) end)
-      end
+      if hook.take_back(batch) then hook.keep_diagnostics(stripped, function() restore(stripped) end) end
     end)
     return
   end

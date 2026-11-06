@@ -11,9 +11,7 @@ describe("pressing p in an oil buffer", function()
     h.open(dir)
   end)
 
-  local function press(keys)
-    vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "x", false)
-  end
+  local function press(keys) vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes(keys, true, false, true), "x", false) end
 
   it("puts a URL copied without a newline on its own line", function()
     vim.fn.setreg("a", "https://example.com/a.zip", "c")
