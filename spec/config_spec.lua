@@ -42,4 +42,13 @@ describe("configuration", function()
 
     assert.are.same({ "https://example.com/a" }, h.wait_downloads(dir, 1))
   end)
+
+  it("setup() copes with a vim.g.oil_download function that returns a non-table", function()
+    vim.g.oil_download = function() return 5 end
+    require("oil-download").setup({ downloader = h.recorder })
+
+    vim.cmd("OilDownload https://example.com/a")
+
+    assert.are.same({ "https://example.com/a" }, h.wait_downloads(dir, 1))
+  end)
 end)

@@ -10,7 +10,7 @@ function M.setup(opts)
   opts = opts or {}
   local current = vim.g.oil_download
   if type(current) == "function" then
-    vim.g.oil_download = function() return vim.tbl_deep_extend("force", current() or {}, opts) end
+    vim.g.oil_download = function() return vim.tbl_deep_extend("force", config.read_user(current), opts) end
   else
     vim.g.oil_download = vim.tbl_deep_extend("force", config.read_user(), opts)
   end

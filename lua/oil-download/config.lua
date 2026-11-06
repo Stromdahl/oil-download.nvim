@@ -19,10 +19,12 @@ M.defaults = {
   url_pattern = "^%s*https?://%S+%s*$",
 }
 
---- `vim.g.oil_download` as a table: called first if it is a function.
+--- `user` (default: `vim.g.oil_download`) as a table: called first if it is
+--- a function; anything but a table reads as no options.
+---@param user? oil_download.Opts|fun():oil_download.Opts
 ---@return oil_download.Opts
-function M.read_user()
-  local user = vim.g.oil_download
+function M.read_user(user)
+  if user == nil then user = vim.g.oil_download end
   if type(user) == "function" then user = user() end
   return type(user) == "table" and user or {}
 end
