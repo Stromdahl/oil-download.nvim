@@ -51,6 +51,18 @@ describe("pressing p in an oil buffer", function()
     assert.are.same({ "notes.txt" }, vim.list_slice(h.lines(), 2))
   end)
 
+  it("pastes a yanked oil entry line normally", function()
+    press("yy")
+    local yanked = vim.fn.getreg('"')
+    assert.matches("^/%d+ .*existing%.txt", yanked)
+
+    press("p")
+
+    local lines = h.lines()
+    assert.are.equal(2, #lines)
+    assert.are.equal(lines[1], lines[2])
+  end)
+
   it("leaves p alone when default_keymaps is false", function()
     vim.g.oil_download = { default_keymaps = false }
     h.open(h.tmpdir())
