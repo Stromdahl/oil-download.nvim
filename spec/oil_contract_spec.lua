@@ -5,6 +5,7 @@ local h = require("helpers")
 
 describe("oil internals the plugin depends on", function()
   before_each(function() h.boot() end)
+  after_each(h.reset)
 
   it("mutator calls confirmation.show through the module table", function()
     local confirmation = require("oil.mutator.confirmation")
@@ -23,6 +24,8 @@ describe("oil internals the plugin depends on", function()
     config._adapter_by_scheme["oil-download-probe://"] = nil
   end)
 
+  after_each(function() require("oil.config")._adapter_by_scheme["oil-download-probe://"] = nil end)
+
   it("renders each action in show(actions, should_confirm, cb) via its adapter's render_action", function()
     local config = require("oil.config")
     config._adapter_by_scheme["oil-download-probe://"] = {
@@ -40,11 +43,9 @@ describe("oil internals the plugin depends on", function()
     vim.api.nvim_feedkeys("n", "x", false)
     vim.wait(3000, function() return answer ~= nil end, 10)
 
-    config._adapter_by_scheme["oil-download-probe://"] = nil
     assert.are.equal("PROBE https://example.com/a", dialog[1])
     assert.is_false(answer)
     assert.are.equal(oil_buf, vim.api.nvim_get_current_buf())
-    h.reset()
   end)
 
   it("fires BufWritePre on oil buffers before parsing them", function()
