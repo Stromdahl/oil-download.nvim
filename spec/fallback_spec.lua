@@ -6,6 +6,8 @@ local h = require("helpers")
 describe("when oil's internals have changed", function()
   local dir, real_confirmation, real_confirm
 
+  after_each(function() h.reset() end)
+
   before_each(function()
     h.boot()
     vim.g.oil_download = { downloader = h.recorder }

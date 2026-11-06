@@ -3,6 +3,8 @@ local h = require("helpers")
 describe("saving an oil buffer with URL lines", function()
   local dir
 
+  after_each(function() h.reset() end)
+
   before_each(function()
     h.boot()
     vim.g.oil_download = { downloader = h.recorder }

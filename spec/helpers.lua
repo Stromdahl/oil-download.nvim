@@ -48,10 +48,19 @@ function M.wait_downloads(dir, n, timeout)
   return M.downloads(dir)
 end
 
+--- Drop all buffers and unsaved oil edits. Call after each test: a modified
+--- buffer left behind makes headless nvim wait on a prompt at exit.
+function M.reset()
+  pcall(require("oil").discard_all_changes)
+  for _, b in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(b) then vim.bo[b].modified = false end
+  end
+  vim.cmd("silent! %bwipeout!")
+end
+
 --- Open oil on `dir` and wait for it to render.
 function M.open(dir)
-  pcall(require("oil").discard_all_changes)
-  vim.cmd("silent! %bwipeout!")
+  M.reset()
   require("oil").open(dir)
   vim.wait(3000, function()
     return vim.bo.filetype == "oil" and require("oil").get_current_dir() ~= nil

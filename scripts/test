@@ -5,4 +5,6 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 eval "$(.hererocks/bin/luarocks path)"
 export PATH="$PWD/.hererocks/bin:$PATH"
-exec busted "$@"
+# stdin from /dev/null: with a live stdin, `nvim -l` was seen blocking at exit
+# after paste_spec re-runs oil.setup() (cause not pinned down); CI has none.
+exec busted "$@" </dev/null
