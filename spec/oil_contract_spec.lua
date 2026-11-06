@@ -61,6 +61,33 @@ describe("oil internals the plugin depends on", function()
     assert.is_true(seen)
   end)
 
+  -- Used to put URL lines back only after oil has finished a save.
+  it("exposes mutator.is_mutating and flags renders with b:oil_rendering / b:oil_dirty", function()
+    assert.are.equal("function", type(require("oil.mutator").is_mutating))
+    local path = assert(package.searchpath("oil.view", package.path))
+    local src = table.concat(vim.fn.readfile(path), "\n")
+    assert.matches("vim%.b%[bufnr%]%.oil_rendering = true", src)
+    assert.matches("vim%.b%[bufnr%]%.oil_dirty = opts", src)
+  end)
+
+  it("reports parse errors as diagnostics in the \"Oil\" namespace", function()
+    local dir = h.tmpdir()
+    vim.fn.writefile({}, dir .. "a.txt")
+    vim.fn.writefile({}, dir .. "b.txt")
+    h.open(dir)
+    local lines = h.lines()
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, {
+      (lines[1]:gsub("a%.txt$", "same.txt")),
+      (lines[2]:gsub("b%.txt$", "same.txt")),
+    })
+
+    vim.cmd("w")
+
+    local ns = vim.api.nvim_get_namespaces()["Oil"]
+    assert.is_not_nil(ns)
+    assert.are.equal(1, #vim.diagnostic.get(0, { namespace = ns }))
+  end)
+
   it("plugin reports the hook as available", function()
     assert.is_true((require("oil-download.oil_hook").available()))
   end)
