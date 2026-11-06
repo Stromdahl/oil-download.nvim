@@ -93,4 +93,18 @@ describe("when oil's internals have changed", function()
     assert.are.equal(1, #diags)
     assert.are.equal(2, diags[1].lnum) -- oil flags the second same.txt
   end)
+
+  it("on No, the URL lines stay in a hidden oil buffer once it is shown again", function()
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { "https://example.com/a.zip" })
+    local other = h.tmpdir()
+    h.open(other, { keep = true })
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { "https://example.com/b.zip" })
+
+    save_answering(2)
+    vim.wait(500)
+    h.open(dir, { keep = true })
+    vim.wait(500)
+
+    assert.is_true(vim.tbl_contains(h.lines(), "https://example.com/a.zip"))
+  end)
 end)

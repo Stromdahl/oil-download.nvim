@@ -134,6 +134,31 @@ function M.after_save(fn)
   vim.schedule(check)
 end
 
+--- Run `fn` once oil has re-rendered `buf`. After a save oil doesn't re-render
+--- hidden oil buffers right away: it marks them `b:oil_dirty` and re-renders on
+--- their next BufEnter, which would wipe lines put back before then.
+---@param buf integer
+---@param fn fun()
+function M.when_shown(buf, fn)
+  if not (vim.api.nvim_buf_is_valid(buf) and vim.b[buf].oil_dirty) then return fn() end
+  vim.api.nvim_create_autocmd("BufEnter", {
+    buffer = buf,
+    once = true,
+    -- Defined after oil's own BufEnter handler, so it runs after that has
+    -- started the render; wait for the render to finish.
+    callback = function()
+      local function check()
+        if vim.api.nvim_buf_is_valid(buf) and (vim.b[buf].oil_dirty or vim.b[buf].oil_rendering) then
+          vim.defer_fn(check, 20)
+        else
+          fn()
+        end
+      end
+      vim.schedule(check)
+    end,
+  })
+end
+
 --- Oil reports parse errors as diagnostics on the buffer it parsed, which had
 --- the URL lines removed. Run `put_back` (which re-inserts them), then move
 --- each diagnostic down past the URL rows above it so it points at the line

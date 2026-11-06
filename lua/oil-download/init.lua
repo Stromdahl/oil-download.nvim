@@ -208,7 +208,11 @@ function M.on_write()
     -- Said up front: if oil's internals moved, the put-back below may not stick.
     vim.notify("Skipped downloads:\n" .. table.concat(urls, "\n"), vim.log.levels.WARN)
     hook.after_save(function()
-      hook.keep_diagnostics(stripped, function() restore(stripped) end)
+      for _, s in ipairs(stripped) do
+        hook.when_shown(s.buf, function()
+          hook.keep_diagnostics({ s }, function() restore({ s }) end)
+        end)
+      end
     end)
   end
 end
