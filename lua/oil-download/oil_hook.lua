@@ -105,6 +105,32 @@ function M.queue(batch)
   return true
 end
 
+--- Whether oil is still busy with a save: mutating, or re-rendering a buffer
+--- afterwards (which would overwrite lines put back too early).
+---@return boolean
+local function oil_busy()
+  local ok, mutator = pcall(require, "oil.mutator")
+  if ok and type(mutator.is_mutating) == "function" and mutator.is_mutating() then return true end
+  for _, buf in ipairs(vim.api.nvim_list_bufs()) do
+    if vim.api.nvim_buf_is_loaded(buf) and vim.b[buf].oil_rendering then return true end
+  end
+  return false
+end
+
+--- Run `fn` once oil has finished the save in progress (including waiting on
+--- its dialog and re-rendering afterwards).
+---@param fn fun()
+function M.after_save(fn)
+  local function check()
+    if oil_busy() then
+      vim.defer_fn(check, 20)
+    else
+      fn()
+    end
+  end
+  vim.schedule(check)
+end
+
 --- If oil never opened the dialog for the queued batch (e.g. the buffer had
 --- a parse error), take it back so the caller can restore its lines.
 ---@param batch oil_download.Batch

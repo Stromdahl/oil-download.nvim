@@ -184,7 +184,7 @@ function M.on_write()
   if vim.fn.confirm(msg, "&Yes\n&No", 1) == 1 then
     download_all(stripped)
   else
-    vim.notify("Skipped downloads (lines removed):\n" .. table.concat(urls, "\n"), vim.log.levels.WARN)
+    hook.after_save(function() restore(stripped) end)
   end
 end
 

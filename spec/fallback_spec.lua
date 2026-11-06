@@ -43,12 +43,22 @@ describe("when oil's internals have changed", function()
     assert.are.same({ "https://example.com/a.zip" }, h.wait_downloads(dir, 1))
   end)
 
-  it("downloads nothing on No and says which URLs were skipped", function()
-    h.notes = {}
+  it("downloads nothing on No and puts the URL lines back", function()
     save_answering(2)
 
     assert.are.same({}, h.wait_downloads(dir, 1, 500))
-    local said = table.concat(vim.tbl_map(function(n) return n.msg end, h.notes), "\n")
-    assert.matches("https://example.com/a.zip", said)
+    assert.is_true(vim.tbl_contains(h.lines(), "https://example.com/a.zip"))
+    assert.is_true(vim.bo.modified)
+  end)
+
+  it("puts the URL lines back on No after oil saves the rest of the buffer", function()
+    vim.fn.confirm = function() return 2 end
+    vim.api.nvim_buf_set_lines(0, -1, -1, false, { "https://example.com/a.zip", "newfile.txt" })
+
+    h.write_and_answer("y") -- oil's own dialog, for the CREATE
+
+    assert.are.same({ "newfile.txt" }, h.files(dir))
+    assert.is_true(vim.wait(1000, function() return vim.tbl_contains(h.lines(), "https://example.com/a.zip") end))
+    assert.are.same({}, h.wait_downloads(dir, 1, 300))
   end)
 end)

@@ -124,7 +124,7 @@ it lives in `lua/oil-download/oil_hook.lua`.
 
 If an oil update removes those internals, the plugin switches to a fallback:
 it asks with its own prompt before oil's dialog. On No in that mode the URL
-lines are dropped (not restored) and listed in a notification.
+lines are put back once oil has finished saving the rest of the buffer.
 
 Run `:checkhealth oil-download` to see which mode is active.
 
