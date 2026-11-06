@@ -61,6 +61,15 @@ function M.check()
   local available, reason = hook.available()
   if available then
     health.ok("oil confirmation hook points present; DOWNLOAD lines go in oil's dialog")
+    local syntax = vim.api.nvim_get_runtime_file("after/syntax/oil_preview.vim", true)
+    local ours = vim.iter(syntax):find(function(f) return f:find("oil%-download", 1) ~= nil end)
+    if ours then
+      health.ok("DOWNLOAD lines are highlighted: " .. ours)
+    else
+      health.warn("after/syntax/oil_preview.vim from this plugin is not on the runtimepath", {
+        "DOWNLOAD lines will show without highlighting; check how the plugin is installed",
+      })
+    end
     if hook.installed() then health.info("Dialog hook installed (happens on the first save with URLs)") end
   else
     health.warn("Running in fallback mode: " .. tostring(reason), {
