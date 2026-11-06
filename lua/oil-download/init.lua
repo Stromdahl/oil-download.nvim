@@ -1,16 +1,19 @@
----@mod oil-download Paste URLs into oil.nvim, download them on :w
-
 local config = require("oil-download.config")
 
 local M = {}
 
 --- Store options in `vim.g.oil_download`. Optional: the plugin works
---- without calling it.
+--- without calling it. If `vim.g.oil_download` is a function, it stays one
+--- (still called on every use), with `opts` merged over its result.
 ---@param opts? oil_download.Opts
 function M.setup(opts)
+  opts = opts or {}
   local current = vim.g.oil_download
-  if type(current) == "function" then current = current() end
-  vim.g.oil_download = vim.tbl_deep_extend("force", current or {}, opts or {})
+  if type(current) == "function" then
+    vim.g.oil_download = function() return vim.tbl_deep_extend("force", current() or {}, opts) end
+  else
+    vim.g.oil_download = vim.tbl_deep_extend("force", config.read_user(), opts)
+  end
 end
 
 ---@param line string

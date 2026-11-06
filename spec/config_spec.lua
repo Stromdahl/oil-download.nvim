@@ -31,4 +31,15 @@ describe("configuration", function()
     assert.are.equal(1, #errors())
     assert.matches("url_pattern", errors()[1].msg)
   end)
+
+  it("setup() keeps a function-valued vim.g.oil_download live", function()
+    local downloader = function() return { "false" } end
+    vim.g.oil_download = function() return { downloader = downloader } end
+    require("oil-download").setup({ default_keymaps = true })
+
+    downloader = h.recorder
+    vim.cmd("OilDownload https://example.com/a")
+
+    assert.are.same({ "https://example.com/a" }, h.wait_downloads(dir, 1))
+  end)
 end)

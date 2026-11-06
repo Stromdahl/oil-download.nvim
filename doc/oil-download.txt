@@ -80,7 +80,10 @@ pasting one. Several URLs can be saved at once.
                                                             *g:oil_download*
 Set `vim.g.oil_download` to a table (or a function returning one) before or
 after the plugin loads; it is read on every use. `require("oil-download")
-.setup(opts)` does the same thing and suits lazy.nvim's `opts`.
+.setup(opts)` does the same thing and suits lazy.nvim's `opts`; it merges
+`opts` over what is already set, and keeps a function a function.
+
+An invalid option is reported once, and its default is used instead.
 
 Defaults:
 >lua
