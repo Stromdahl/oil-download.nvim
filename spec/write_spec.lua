@@ -31,6 +31,14 @@ describe("saving an oil buffer with URL lines", function()
     assert.is_true(vim.bo.modified)
   end)
 
+  it("puts the URL back without a stray blank line in an empty directory on No", function()
+    vim.api.nvim_buf_set_lines(0, 0, -1, false, { "https://example.com/a.zip" })
+
+    h.write_and_answer("n")
+
+    assert.are.same({ "https://example.com/a.zip" }, h.lines())
+  end)
+
   it("shows oil's own actions alongside, and performs them on Yes", function()
     vim.api.nvim_buf_set_lines(0, -1, -1, false, { "https://example.com/a.zip", "newfile.txt" })
 

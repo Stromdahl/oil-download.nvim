@@ -129,7 +129,11 @@ end
 ---@param stripped oil_download.Stripped[]
 local function restore(stripped)
   for _, s in ipairs(stripped) do
-    if vim.api.nvim_buf_is_valid(s.buf) then
+    local current = vim.api.nvim_buf_is_valid(s.buf) and vim.api.nvim_buf_get_lines(s.buf, 0, -1, false)
+    if current and #current == 1 and current[1] == "" then
+      -- stripping emptied the buffer down to the one line nvim always keeps
+      vim.api.nvim_buf_set_lines(s.buf, 0, -1, false, s.urls)
+    elseif current then
       for i, row in ipairs(s.rows) do
         vim.api.nvim_buf_set_lines(s.buf, row - 1, row - 1, false, { s.urls[i] })
       end
