@@ -3,6 +3,8 @@ local h = require("helpers")
 --- Run :checkhealth oil-download and return the report text.
 local function checkhealth()
   vim.cmd("checkhealth oil-download")
+  -- Newer Neovim fills the report asynchronously, then sets nomodifiable.
+  if vim.fn.has("nvim-0.12") == 1 then vim.wait(5000, function() return not vim.bo.modifiable end, 10) end
   local text = table.concat(vim.api.nvim_buf_get_lines(0, 0, -1, false), "\n")
   vim.cmd("bwipeout!")
   return text

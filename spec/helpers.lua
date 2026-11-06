@@ -12,6 +12,20 @@ local booted = false
 function M.boot()
   if booted then return end
   booted = true
+  -- In-memory clipboard: CI has no clipboard tool, and tests shouldn't touch
+  -- the real one.
+  local clip = { ["+"] = { { "" }, "v" }, ["*"] = { { "" }, "v" } }
+  local function copy(reg)
+    return function(lines, regtype) clip[reg] = { lines, regtype } end
+  end
+  local function paste(reg)
+    return function() return clip[reg] end
+  end
+  vim.g.clipboard = {
+    name = "spec",
+    copy = { ["+"] = copy("+"), ["*"] = copy("*") },
+    paste = { ["+"] = paste("+"), ["*"] = paste("*") },
+  }
   vim.opt.runtimepath:prepend(root)
   vim.cmd("filetype plugin on")
   vim.cmd("syntax on")
