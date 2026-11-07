@@ -17,8 +17,7 @@ jobs:
     steps:
       - uses: googleapis/release-please-action@v5
         id: release
-        with:
-          release-type: simple
+        # Settings live in release-please-config.json (first release: 0.1.0).
 
   # In this workflow (not on a tag push): tags created with GITHUB_TOKEN
   # don't trigger other workflows.
